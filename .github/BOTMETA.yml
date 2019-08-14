@@ -388,6 +388,7 @@ files:
     maintainers: tdtrask
   $modules/packaging/os/apt.py: $team_ansible
   $modules/packaging/os/apt_repository.py: $team_ansible
+  $modules/packaging/os/conda.py: beenje
   $modules/packaging/os/openbsd_pkg.py: &bsd
     ignored: bleader
     keywords: [ doas, dragonfly, freebsd, iocage, jail, netbsd, openbsd, opnsense, pfsense ]

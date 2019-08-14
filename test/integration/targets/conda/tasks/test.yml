@@ -1,0 +1,151 @@
+---
+- name: display conda version
+  command: "{{ conda_path }}/bin/conda --version"
+  register: conda_version
+
+- name: make sure conda environments don't exist
+  file:
+    path: "{{ conda_path }}/envs/{{ item }}"
+    state: absent
+  loop:
+    - myapp
+    - python3
+    - condaforge
+
+- name: try to install a package that doesn't exist
+  conda:
+    name: foo
+    state: present
+  register: foo_install
+  ignore_errors: true
+
+- name: verify that the command failed
+  assert:
+    that:
+      - foo_install.failed
+
+- name: install flask in myapp
+  conda:
+    name:
+      - Python=3.7
+      - flask
+    environment: myapp
+  register: flask_install
+
+- name: verify we recorded a change
+  assert:
+    that:
+      - flask_install.changed
+
+- name: verify that flask is installed
+  command: "{{ conda_path }}/envs/myapp/bin/flask --version"
+
+- name: update flask in myapp
+  conda:
+    name: flask
+    state: latest
+    environment: myapp
+  register: flask_update
+
+- name: verify we didn't record a change
+  assert:
+    that:
+      - not flask_update.changed
+
+- name: remove flask from myapp
+  conda:
+    name: flask
+    state: absent
+    environment: myapp
+  register: flask_remove
+
+- name: verify we recorded a change
+  assert:
+    that:
+      - flask_remove.changed
+
+- name: verify that flask was removed
+  command: "{{ conda_path }}/envs/myapp/bin/flask --version"
+  register: flask_cmd
+  failed_when: "flask_cmd.rc == 0"
+
+- name: try to remove flask again from myapp
+  conda:
+    name: flask
+    state: absent
+    environment: myapp
+  register: flask_remove2
+
+- name: verify we didn't record a change
+  assert:
+    that:
+      - not flask_remove2.changed
+
+- name: create an environment with Python 3.7.1
+  conda:
+    name: Python=3.7.1
+    environment: python3
+  register: python_install
+
+- name: verify we recorded a change
+  assert:
+    that:
+      - python_install.changed
+
+- name: check Python version
+  command: "{{ conda_path }}/envs/python3/bin/python --version"
+  register: python_version
+
+- name: verify Python 3.7.1 was installed
+  assert:
+    that:
+      - "'Python 3.7.1' in python_version.stdout"
+
+- name: update Python in python3 env
+  conda:
+    name: Python
+    state: latest
+    environment: python3
+  register: python_update
+
+- name: verify we recorded a change
+  assert:
+    that:
+      - python_update.changed
+
+- name: check Python version
+  command: "{{ conda_path }}/envs/python3/bin/python --version"
+  register: python_version
+
+- name: verify Python was updated
+  assert:
+    that:
+      - "'Python 3.7.1' not in python_version.stdout"
+      - "'Python' in python_version.stdout"
+
+- name: try to install aioredis from the default channels
+  conda:
+    name: aioredis
+    state: present
+    environment: condaforge
+  register: aioredis_install
+  ignore_errors: true
+
+- name: verify that the package wasn't found
+  assert:
+    that:
+      - aioredis_install.failed
+
+- name: install aioredis from conda-forge
+  conda:
+    name: aioredis
+    state: present
+    environment: condaforge
+    channels:
+      - conda-forge
+  register: aioredis_install2
+
+- name: verify we recorded a change
+  assert:
+    that:
+      - aioredis_install2.changed

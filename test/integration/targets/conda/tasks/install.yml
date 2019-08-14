@@ -1,0 +1,31 @@
+---
+- name: load variables based on the OS
+  include_vars:
+    file: "{{ ansible_system }}.yml"
+
+- name: delete conda installation directory
+  file:
+    name: "{{ conda_path }}"
+    state: absent
+
+- name: create conda directory
+  file:
+    path: "{{ conda_path }}"
+    state: directory
+    mode: 0755
+
+- name: download miniconda installer
+  get_url:
+    url: "{{ conda_installer_url }}"
+    checksum: md5:{{ conda_installer_md5 }}
+    dest: "{{ output_dir }}"
+    mode: 0644
+
+- name: install conda
+  command: >
+    bash {{ output_dir }}/{{ conda_installer }} -p {{ conda_path }} -b -f
+
+- name: delete miniconda installer
+  file:
+    name: "{{ output_dir }}/{{ conda_installer }}"
+    state: absent

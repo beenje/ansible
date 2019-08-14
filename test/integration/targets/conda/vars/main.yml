@@ -1,0 +1,3 @@
+---
+conda_path: "{{ output_dir }}/conda"
+conda_installer_url: "https://repo.anaconda.com/miniconda/{{ conda_installer }}"

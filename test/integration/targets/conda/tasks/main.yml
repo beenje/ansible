@@ -1,0 +1,17 @@
+---
+- name: install conda 4.6.14
+  include_tasks: install.yml
+
+- block:
+    - name: test the module with conda 4.6.14
+      include_tasks: test.yml
+    - name: update conda to the latest version
+      conda:
+        name: conda
+        state: latest
+        executable: "{{ conda_path }}/bin/conda"
+    - name: test the module with latest conda version
+      include_tasks: test.yml
+  module_defaults:
+    conda:
+      executable: "{{ conda_path }}/bin/conda"
